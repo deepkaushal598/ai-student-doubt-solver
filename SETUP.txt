@@ -1,0 +1,86 @@
+🚀 SETUP INSTRUCTIONS - AI Student Doubt Solver
+================================================
+
+STEP 1: Get OpenRouter API Key
+------------------------------
+1. Visit: https://openrouter.io/auth/login
+2. Sign up / Login with your account
+3. Go to Settings or Dashboard
+4. Create an API key
+5. Copy the key (you'll need it in Step 3)
+
+STEP 2: Install Python Dependencies
+------------------------------------
+Option A - Automatic (Windows):
+   - Double-click "run.bat"
+   - It will install everything and start the app
+
+Option B - Manual:
+   - Open Command Prompt / Terminal
+   - Navigate to this folder
+   - Run: pip install -r requirements.txt
+
+STEP 3: Configure API Key
+--------------------------
+1. Open "Main.py" in a text editor
+2. Find this line (around line 10):
+   OPENROUTER_API_KEY = "your-openrouter-api-key-here"
+3. Replace with your actual API key:
+   OPENROUTER_API_KEY = "sk-or-v1-xxxxxxxxxxxx..."
+4. Save the file
+
+STEP 4: Run the Application
+-----------------------------
+Option A - Windows Batch:
+   - Double-click "run.bat"
+   - Browser will open automatically
+
+Option B - Command Line:
+   - Open Command Prompt in this folder
+   - Run: python Main.py
+   - Open browser to: http://localhost:5000
+
+STEP 5: Use the Chatbot
+------------------------
+1. Website opens at http://localhost:5000
+2. Select an AI agent from the left sidebar
+3. Type your academic question
+4. Press Enter or click "Send"
+5. Get instant AI-powered responses!
+
+🤖 AVAILABLE AI AGENTS
+-----------------------
+✓ GPT-4 Turbo         - Best for complex reasoning
+✓ Claude 3 Opus       - Balanced general-purpose
+✓ GPT-3.5 Turbo       - Fast responses
+✓ Mistral Large       - Code and technical help
+✓ Llama 2 70B         - Math and science specialist
+
+💡 TIPS
+-------
+• All models use the SAME OpenRouter API key
+• Switch between models by clicking on them
+• Each response shows which model was used
+• Internet connection required
+• Works on any modern browser
+
+📋 TROUBLESHOOTING
+-------------------
+Problem: "Port 5000 is already in use"
+Solution: Edit Main.py, change port=5000 to port=8000
+
+Problem: "API Key not working"
+Solution: Check https://openrouter.io for valid key and credits
+
+Problem: "Module not found errors"
+Solution: Run "pip install -r requirements.txt" again
+
+❓ NEED HELP?
+--------------
+• Check README.md for detailed documentation
+• Review Main.py comments for backend details
+• Open index.html in text editor for frontend code
+
+========================================
+Ready? Start with: python Main.py
+========================================
