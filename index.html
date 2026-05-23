@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -104,6 +105,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            overflow: hidden;
         }
 
         .chat-header {
@@ -127,8 +129,8 @@
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            max-height: 500px;
             scroll-behavior: smooth;
+            height: 100%;
         }
 
         .message {
@@ -142,6 +144,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -213,13 +216,29 @@
             animation: bounce 1.4s infinite;
         }
 
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
 
         @keyframes bounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-10px); }
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
         }
 
         /* Input Area */
@@ -328,6 +347,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Sidebar -->
@@ -357,12 +377,8 @@
 
             <div class="chat-input-area">
                 <div class="input-group">
-                    <input 
-                        type="text" 
-                        id="userInput" 
-                        placeholder="Ask your doubt here... (Press Enter or click Send)"
-                        autocomplete="off"
-                    >
+                    <input type="text" id="userInput" placeholder="Ask your doubt here... (Press Enter or click Send)"
+                        autocomplete="off">
                     <button id="sendBtn" onclick="sendMessage()">Send</button>
                 </div>
             </div>
@@ -378,10 +394,10 @@
             try {
                 const response = await fetch('/api/models');
                 const models = await response.json();
-                
+
                 const modelList = document.getElementById('modelList');
                 modelList.innerHTML = '';
-                
+
                 models.forEach(model => {
                     const item = document.createElement('div');
                     item.className = `model-item ${model.id === selectedModel ? 'active' : ''}`;
@@ -399,35 +415,35 @@
 
         function selectModel(modelId, element) {
             selectedModel = modelId;
-            
+
             document.querySelectorAll('.model-item').forEach(item => {
                 item.classList.remove('active');
             });
             element.classList.add('active');
-            
+
             const modelName = element.querySelector('.model-name').textContent;
             document.getElementById('currentModel').textContent = modelName;
-            
+
             clearChat();
         }
 
         function addMessage(content, isUser = false, modelUsed = null) {
             const chatMessages = document.getElementById('chatMessages');
-            
+
             if (chatMessages.querySelector('.empty-state')) {
                 chatMessages.innerHTML = '';
             }
-            
+
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
-            
+
             const avatar = document.createElement('div');
             avatar.className = 'message-avatar';
             avatar.textContent = isUser ? '👤' : '🤖';
-            
+
             const content_div = document.createElement('div');
             content_div.className = 'message-content';
-            
+
             if (isUser) {
                 content_div.textContent = content;
             } else {
@@ -436,12 +452,12 @@
                     content_div.innerHTML += `<div class="success-badge">Via ${modelUsed}</div>`;
                 }
             }
-            
+
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(content_div);
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-            
+
             // Force scroll with multiple attempts and delay
             setTimeout(() => {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -468,7 +484,7 @@
                 </div>
             `;
             chatMessages.appendChild(typingDiv);
-            
+
             // Force scroll with multiple attempts
             setTimeout(() => {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -501,7 +517,10 @@
 
             addTypingIndicator();
 
-    // Auto scroll
+            document.getElementById('connectionStatus').textContent =
+                '🤖 AI Agents Thinking...';
+
+            // Auto scroll
             const chatMessages = document.getElementById('chatMessages');
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -512,15 +531,15 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-            body: JSON.stringify({
-                message: message,
-                model: selectedModel
-            })
-        });
+                    body: JSON.stringify({
+                        message: message,
+                        model: selectedModel
+                    })
+                });
 
-        const data = await response.json();
+                const data = await response.json();
 
-        removeTypingIndicator();
+                removeTypingIndicator();
 
                 if (response.ok && data.success) {
                     const formattedResponse = (data.response || data.reply)
@@ -528,44 +547,45 @@
                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-            addMessage(formattedResponse, false, data.model_used);
+                    addMessage(formattedResponse, false, data.model_used);
 
-            document.getElementById('connectionStatus').textContent = '✓ Ready';
+                    document.getElementById('connectionStatus').textContent =
+                        '✅ Agents Ready';
 
-        } else {
+                } else {
 
-            const errorMsg = data.error || 'Failed to get response';
+                    const errorMsg = data.error || 'Failed to get response';
 
-            addMessage(
-                `<span style="color: #c33;">⚠️ ${errorMsg}</span>`,
-                false
-            );
+                    addMessage(
+                        `<span style="color: #c33;">⚠️ ${errorMsg}</span>`,
+                        false
+                    );
+                }
+
+            } catch (error) {
+
+                removeTypingIndicator();
+
+                addMessage(
+                    `<span style="color: #c33;">⚠️ Error: ${error.message}</span>`,
+                    false
+                );
+
+                document.getElementById('connectionStatus').textContent = '✗ Error';
+
+            } finally {
+
+                isLoading = false;
+
+                document.getElementById('sendBtn').disabled = false;
+
+                input.focus();
+
+                // Auto scroll after response
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
         }
-
-    } catch (error) {
-
-        removeTypingIndicator();
-
-        addMessage(
-            `<span style="color: #c33;">⚠️ Error: ${error.message}</span>`,
-            false
-        );
-
-        document.getElementById('connectionStatus').textContent = '✗ Error';
-
-    } finally {
-
-        isLoading = false;
-
-        document.getElementById('sendBtn').disabled = false;
-
-        input.focus();
-
-        // Auto scroll after response
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-}
 
         function clearChat() {
             const chatMessages = document.getElementById('chatMessages');
@@ -589,4 +609,5 @@
         document.getElementById('currentModel').textContent = 'GPT-4 Turbo';
     </script>
 </body>
+
 </html>
