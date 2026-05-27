@@ -1,167 +1,170 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 import os
-import requests
 
-# Load environment variables
+from crewai import Agent, Task, Crew
+from langchain_groq import ChatGroq
+
 load_dotenv()
 
-app = Flask(__name__, template_folder='.', static_folder='.')
+app = Flask(__name__)
+#my name is yash 
+# =========================
+# GROQ LLM
+# =========================
 
-# ===============================
-# API CONFIG
-# ===============================
+llm = ChatGroq(
+    groq_api_key=os.getenv("GROQ_API_KEY"),
+    model_name="llama-3.1-8b-instant"
+)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+# =========================
+# AGENTS
+# =========================
 
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+physics_agent = Agent(
+    role="Physics Expert",
+    goal="Solve physics doubts in easy student language",
+    backstory="You are an expert physics teacher helping students learn concepts simply.",
+    llm=llm,
+    verbose=False
+)
 
+chemistry_agent = Agent(
+    role="Chemistry Expert",
+    goal="Explain chemistry concepts clearly",
+    backstory="You simplify chemistry for beginners.",
+    llm=llm,
+    verbose=False
+)
 
+math_agent = Agent(
+    role="Math Expert",
+    goal="Solve mathematical problems step by step",
+    backstory="You are a professional math tutor.",
+    llm=llm,
+    verbose=False
+)
 
-models = [
-    {
-        "id": "llama",
-        "name": "Llama 3.1",
-        "type": "Fast AI"
-    },
-    {
-        "id": "gemini",
-        "name": "Gemini Pro",
-        "type": "Study Helper"
-    },
-    {
-        "id": "gpt4",
-        "name": "GPT-4 Turbo",
-        "type": "Smart Reasoning"
-    },
-    {
-        "id": "claude",
-        "name": "Claude AI",
-        "type": "Long Answers"
-    },
-    {
-        "id": "physics",
-        "name": "Physics Mentor",
-        "type": "Science Expert"
-    },
-    {
-        "id": "coder",
-        "name": "Code Assistant",
-        "type": "Programming AI"
-    }
-]
+notes_agent = Agent(
+    role="Notes Generator",
+    goal="Generate concise study notes",
+    backstory="You create beautiful short notes for students.",
+    llm=llm,
+    verbose=False
+)
 
-# ===============================
-# ROUTES
-# ===============================
+quiz_agent = Agent(
+    role="Quiz Generator",
+    goal="Generate MCQs and quizzes",
+    backstory="You create quizzes for learning revision.",
+    llm=llm,
+    verbose=False
+)
 
-@app.route('/')
+# =========================
+# FRONTEND
+# =========================
+
+@app.route("/")
 def home():
-    return render_template("index.html")
+    return send_from_directory(".", "index.html")
 
+# =========================
+# MODELS / AGENTS LIST
+# =========================
 
-@app.route('/api/models')
-def get_models():
-    return jsonify(models)
+@app.route("/api/models")
+def models():
+    return jsonify([
+        {
+            "id": "physics",
+            "name": "Physics AI",
+            "type": "Concept Expert"
+        },
+        {
+            "id": "chemistry",
+            "name": "Chemistry AI",
+            "type": "Reaction Expert"
+        },
+        {
+            "id": "math",
+            "name": "Math AI",
+            "type": "Problem Solver"
+        },
+        {
+            "id": "notes",
+            "name": "Notes AI",
+            "type": "Study Notes"
+        },
+        {
+            "id": "quiz",
+            "name": "Quiz AI",
+            "type": "MCQ Generator"
+        }
+    ])
 
+# =========================
+# CHAT API
+# =========================
 
-@app.route('/api/chat', methods=['POST'])
+@app.route("/api/chat", methods=["POST"])
 def chat():
 
     try:
-
         data = request.json
 
         user_message = data.get("message", "")
-        selected_model = data.get("model", "llama")
+        selected_model = data.get("model", "physics")
 
-        # All fake agents use same REAL model
-        model_map = {
-            "llama": "llama-3.1-8b-instant",
-            "gemini": "llama-3.1-8b-instant",
-            "gpt4": "llama-3.1-8b-instant",
-            "claude": "llama-3.1-8b-instant",
-            "physics": "llama-3.1-8b-instant",
-            "coder": "llama-3.1-8b-instant"
-        }
+        # SELECT AGENT
 
-        real_model = model_map.get(
-            selected_model,
-            "llama-3.1-8b-instant"
+        selected_agent = physics_agent
+
+        if selected_model == "chemistry":
+            selected_agent = chemistry_agent
+
+        elif selected_model == "math":
+            selected_agent = math_agent
+
+        elif selected_model == "notes":
+            selected_agent = notes_agent
+
+        elif selected_model == "quiz":
+            selected_agent = quiz_agent
+
+        # TASK
+
+        task = Task(
+            description=user_message,
+            expected_output="Helpful educational response for the student.",
+            agent=selected_agent
         )
 
-        headers = {
-            "Authorization": f"Bearer {GROQ_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        # CREW
 
-        payload = {
-            "model": real_model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": """
-                    You are a smart and friendly AI teacher.
-                    Explain everything in simple student-friendly language.
-                    Give clean formatting and points.
-                    """
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
-            "temperature": 0.7,
-            "max_tokens": 1024
-        }
-
-        response = requests.post(
-            GROQ_URL,
-            headers=headers,
-            json=payload
+        crew = Crew(
+            agents=[selected_agent],
+            tasks=[task],
+            verbose=False
         )
 
-        result = response.json()
-
-        print(result)
-
-        # Handle API errors
-        if "choices" not in result:
-
-            error_message = "Something went wrong"
-
-            if "error" in result:
-                error_message = result["error"].get(
-                    "message",
-                    "API Error"
-                )
-
-            return jsonify({
-                "success": False,
-                "error": error_message
-            })
-
-        ai_response = result["choices"][0]["message"]["content"]
+        result = crew.kickoff()
 
         return jsonify({
             "success": True,
-            "response": ai_response,
-            "model_used": real_model
+            "response": str(result),
+            "model_used": selected_model
         })
 
     except Exception as e:
-
-        print("SERVER ERROR:", str(e))
 
         return jsonify({
             "success": False,
             "error": str(e)
         })
 
-
-# ===============================
-# RUN APP
-# ===============================
+# =========================
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True)
+    app.run(debug=True)
