@@ -8,7 +8,7 @@ from langchain_groq import ChatGroq
 load_dotenv()
 
 app = Flask(__name__)
-#my name is yash 
+#my name is yashh
 # =========================
 # GROQ LLM
 # =========================
