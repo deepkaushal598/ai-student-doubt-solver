@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 import os
 
-from crewai import Agent, Task, Crew
+from crewai import Agent, Task, Crew, LLM
 from langchain_groq import ChatGroq
 
 load_dotenv()
@@ -13,11 +13,18 @@ app = Flask(__name__)
 # GROQ LLM
 # =========================
 
-llm = ChatGroq(
-    groq_api_key=os.getenv("GROQ_API_KEY"),
+
+groq_key = os.getenv("GROQ_API_KEY")
+
+langchain_llm = ChatGroq(
+    groq_api_key=groq_key,
     model_name="llama-3.1-8b-instant"
 )
 
+llm = LLM(
+    model="groq/llama-3.1-8b-instant",
+    api_key=groq_key
+)
 # =========================
 # AGENTS
 # =========================
